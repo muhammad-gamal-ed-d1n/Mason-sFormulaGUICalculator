@@ -109,6 +109,51 @@ export class SignalFlowService {
     return results;
   }
 
+  //calculate the gain of path by multiplying the gains of its edges
+  private calculatePathGain(path: string, edges: Edge[]): number {
+    const nodes = path.split('');
+    let gain = 1;
+
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const from = nodes[i];
+      const to = nodes[i + 1];
+      const edge = edges.find(e => e.from === from && e.to === to);
+
+      if (!edge) return 0;
+      gain *= edge.gain;
+    }
+
+    return gain;
+  }
+
+  //calculate the gain of a loop by multiplying the gains of its edges
+  private calculateLoopGain(loop: string, edges: Edge[]): number {
+    const nodes = loop.split('-').filter(Boolean);
+    let gain = 1;
+
+    for (let i = 0; i < nodes.length; i++) {
+      const from = nodes[i];
+      const to = nodes[(i + 1) % nodes.length];
+      const edge = edges.find(e => e.from === from && e.to === to);
+
+      if (!edge) return 0;
+      gain *= edge.gain;
+    }
+
+    return gain;
+  }
+  
+  //build a map of loop gains for all loops found for easier calculation of deltas
+  private buildLoopGainsMap(loops: string[], edges: Edge[]): Map<string, number> {
+    const loopGains = new Map<string, number>();
+
+    for (const loop of loops) {
+      loopGains.set(loop, this.calculateLoopGain(loop, edges));
+    }
+
+    return loopGains;
+  }
+
   public calculateDelta(allLoops: string[], loopGains: Map<string, number>): number {
     let delta = 1;
     
@@ -136,5 +181,45 @@ export class SignalFlowService {
     }
 
     return delta;
+  }
+
+  //Delta i calculation (same as calulateDelta but for remaining edges and loops)
+  public calculateDeltaForPath(path: string, edges: Edge[]): number {
+    const pathNodes = new Set(path.split(''));
+
+    //remove any branch touching the nodes on the forward path
+    //remaining are the edges that don't contain the from or to nodes
+    const remainingEdges = edges.filter(
+      edge => !pathNodes.has(edge.from) && !pathNodes.has(edge.to)
+    );
+
+    const remainingLoops = Array.from(this.findLoops(remainingEdges));
+    const remainingLoopGains = this.buildLoopGainsMap(remainingLoops, edges); 
+
+    return this.calculateDelta(remainingLoops, remainingLoopGains);
+  }
+
+  //Mason's formula
+  public calculateMasonsFormula(edges: Edge[]) {
+    const forwardPaths = this.helper(edges) || [];
+    const allLoops = Array.from(this.findLoops(edges));
+    const loopGains = this.buildLoopGainsMap(allLoops, edges);
+    const delta = this.calculateDelta(allLoops, loopGains);
+
+    let numerator = 0;
+    for (const path of forwardPaths) {
+      const pathGain = this.calculatePathGain(path, edges);
+      const deltaI = this.calculateDeltaForPath(path, edges);
+      numerator +=  pathGain * deltaI;
+    }
+
+    return {
+      transferFunction: delta === 0 ? Infinity : numerator / delta,
+      numerator,
+      delta,
+      forwardPaths,
+      allLoops,
+      loopGains,
+    };
   }
 }
