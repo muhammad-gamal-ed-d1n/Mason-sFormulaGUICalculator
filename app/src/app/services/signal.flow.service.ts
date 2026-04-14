@@ -70,4 +70,71 @@ export class SignalFlowService {
     return canonicalLoop.join('-')
   }
 
+  private areTouching(loopA: string, loopB: string): boolean {
+    const nodesA = loopA.split('-');
+    const nodesB = loopB.split('-');
+    // any node in loop A exists in loop B?
+    return nodesA.some(node => nodesB.includes(node));
+  }
+
+  /**
+  * @param allLoops: the unique loops found by Mego's code
+  * @param count: the number of non-touching loops we want to find (2, 3, ...)
+  * @returns array of loop combinations (each combination is an array of loop strings)
+  */
+  public getNonTouchingGroups(allLoops: string[], count: number): string[][] {
+    const results: string[][] = [];
+
+    const findCombinations = (start: number, currentGroup: string[]) => {
+        if (currentGroup.length === count) {
+            results.push([...currentGroup]);
+            return;
+        }
+
+        for (let i = start; i < allLoops.length; i++) {
+            const nextLoop = allLoops[i];
+            
+            // check if nextLoop touches any loop already in our currentGroup
+            const touchesExisting = currentGroup.some(l => this.areTouching(l, nextLoop));
+
+            if (!touchesExisting) {
+                currentGroup.push(nextLoop);
+                findCombinations(i + 1, currentGroup);
+                currentGroup.pop(); // backtrack
+            }
+        }
+    };
+
+    findCombinations(0, []);
+    return results;
+  }
+
+  public calculateDelta(allLoops: string[], loopGains: Map<string, number>): number {
+    let delta = 1;
+    
+    // 1.sum of individual loops
+    let sumIndividual = 0;
+    allLoops.forEach(l => sumIndividual += loopGains.get(l) || 0);
+    delta -= sumIndividual;
+
+    // 2.add/subtract combinations (2-non-touching, ...)
+    for (let n = 2; n <= allLoops.length; n++) {
+        const groups = this.getNonTouchingGroups(allLoops, n);
+        if (groups.length === 0) break; // no more combinations possible
+
+        let groupSum = 0;
+        for (const group of groups) {
+            // product of gains in this specific non-touching group
+            let product = 1;
+            group.forEach(loopStr => product *= (loopGains.get(loopStr) || 0));
+            groupSum += product;
+        }
+
+        // alternating sign: + for 2-touching, - for 3-touching, etc.
+        if (n % 2 === 0) delta += groupSum;
+        else delta -= groupSum;
+    }
+
+    return delta;
+  }
 }
