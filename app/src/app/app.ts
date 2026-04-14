@@ -17,12 +17,13 @@ export class App {
   graph: Map<string, string[]> = new Map([
     ["A", ["B"]],
     ["B", ["C", "D"]],
-    ["D", ["C"]], // A -> B -> C
+    ["D", ["A"]], // A -> B -> C
     ["C", []]//           |    |
   ])          //          D ---
 
   ngOnInit() {
-    this.sfservice.helper(this.graph)
+    // this.sfservice.helper(this.graph)
+    this.sfservice.findLoops(this.graph)
   }
 
 }
