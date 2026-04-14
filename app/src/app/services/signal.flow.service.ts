@@ -1,45 +1,46 @@
 import { Injectable } from '@angular/core';
+import { Edge } from '../model/edge';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SignalFlowService {
-  
-  public findPaths(arr: Map<string, string[]>, visited: Set<string>, paths: string[], path: string, node: string) {
+
+  public findPaths(edges: Edge[], visited: Set<string>, paths: string[], path: string, node: string) {
     if (visited.has(node)) return;
 
     visited.add(node)
     path += node
-    
+
     if (node == "C") {
-      console.log(path)
-      paths.push(node)
+      paths.push(path)
     }
 
-    for (let n of arr.get(node)!) {
-      this.findPaths(arr, new Set(visited), paths, path, n)
+    for (let edge of edges) {
+      if (edge.from == node) {
+        this.findPaths(edges, new Set(visited), paths, path, edge.to)
+      }
     }
 
     return paths
   }
 
-  public helper(graph: Map<string, string[]>) {
-    this.findPaths(graph, new Set(), [], "", "A")
+  public helper(edges: Edge[]) {
+    return this.findPaths(edges, new Set(), [], "", "A")
   }
 
-  public findLoops(graph: Map<string, string[]>) {
+  public findLoops(edges: Edge[]) {
     const visited = new Set<string>()
     const loops: Set<string> = new Set<string>()
 
-    for (let node of graph.keys()) {
-      this.findLoopsAtPoint(graph, node, new Set(visited), loops, "", node)
+    for (let edge of edges) {
+      this.findLoopsAtPoint(edges, edge.from, new Set(visited), loops, "", edge.from)
     }
 
-    console.log(loops);
-    
+    return loops
   }
 
-  public findLoopsAtPoint(graph: Map<string, string[]>, start: string, visited: Set<string>, loops: Set<string>, loop: string, node: string) {
+  public findLoopsAtPoint(edges: Edge[], start: string, visited: Set<string>, loops: Set<string>, loop: string, node: string) {
     if (visited.has(node) && node != start) return;
 
     visited.add(node)
@@ -49,9 +50,11 @@ export class SignalFlowService {
       return
     }
 
-    for (let l of graph.get(node)!) [
-      this.findLoopsAtPoint(graph, start, new Set(visited), loops, loop, l)
-    ]
+    for (let edge of edges) {
+      if (edge.from == node) {
+        this.findLoopsAtPoint(edges, start, new Set(visited), loops, loop, edge.to)
+      }
+    }
   }
 
   private getCanonicalLoop(loop: string) {
