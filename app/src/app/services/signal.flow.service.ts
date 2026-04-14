@@ -29,7 +29,7 @@ export class SignalFlowService {
 
   public findLoops(graph: Map<string, string[]>) {
     const visited = new Set<string>()
-    const loops: string[] = []
+    const loops: Set<string> = new Set<string>()
 
     for (let node of graph.keys()) {
       this.findLoopsAtPoint(graph, node, new Set(visited), loops, "", node)
@@ -39,19 +39,32 @@ export class SignalFlowService {
     
   }
 
-  public findLoopsAtPoint(graph: Map<string, string[]>, start: string, visited: Set<string>, loops: string[], loop: string, node: string) {
+  public findLoopsAtPoint(graph: Map<string, string[]>, start: string, visited: Set<string>, loops: Set<string>, loop: string, node: string) {
     if (visited.has(node) && node != start) return;
 
     visited.add(node)
     loop += node
     if (node == start && loop.length > 1) {
-      loops.push(loop)
+      loops.add(this.getCanonicalLoop(loop))
       return
     }
 
     for (let l of graph.get(node)!) [
       this.findLoopsAtPoint(graph, start, new Set(visited), loops, loop, l)
     ]
+  }
+
+  private getCanonicalLoop(loop: string) {
+    loop = loop.slice(0, loop.length - 1)
+
+    let min = 0
+    for (let i = 0; i < loop.length; i++) {
+      if (loop[i] < loop[min]) min = i;
+    }
+
+    let canonicalLoop = [...loop.slice(min), ...loop.slice(0, min)]
+
+    return canonicalLoop.join('-')
   }
 
 }
