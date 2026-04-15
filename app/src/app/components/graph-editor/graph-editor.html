@@ -1,0 +1,28 @@
+<div class="app-layout">
+  
+  <div class="toolbar">
+    <button (click)="drawing=!drawing">
+      @if(drawing){
+        <span class="material-symbols-outlined">delete</span>
+      }@else{
+        <span class="material-symbols-outlined">edit</span>
+      } 
+    </button>
+  </div> 
+
+  <div class="UI-container">
+
+    <div #canvas class="canvas-container"></div>
+    <div class="solution">
+      <h2>SFG solver</h2>
+      <button (click)="takeSnapshotimage()"> Take Screenshot </button>
+      @if(jpg64) {
+        <div style="margin-top: 20px;">
+          <h3>Snapshot:</h3>
+          <img [src]="jpg64" style="width:100%;"/>
+        </div>
+      }
+    </div>
+  </div>
+  
+</div>
