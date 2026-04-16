@@ -1,4 +1,4 @@
-<div class="app-layout">
+<div class="app-layout" [class.light-mode]="lightmode">
   
   <div class="navbar">
     <nav>
@@ -6,6 +6,14 @@
         <ul class="nav-links">
         <li><a href="#">Home</a></li>
         <li><a href="#">Plots</a></li>
+        <li><button [class]="lightmode ? 'btn-light' : 'btn-dark'" (click)="toggleLightMode()"> 
+          @if(lightmode){
+            <span class="material-symbols-outlined">light_mode</span>
+          }@else{
+            <span class="material-symbols-outlined">dark_mode</span>
+          }
+        </button>
+        </li>
       </ul>
       </div>
       <div class="logo">
@@ -54,4 +62,3 @@
 
   </div>
 </div>
-

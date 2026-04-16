@@ -15,6 +15,7 @@ export class GraphEditorComponent implements AfterViewInit {
   @ViewChild('canvas') canvasElement!:ElementRef;
   nodeCnt=0;
   drawing=true;
+  lightmode=false;
   jpg64: string='';
   cy!: cytoscape.Core;
   undohistory: any[] = [];
@@ -310,7 +311,7 @@ export class GraphEditorComponent implements AfterViewInit {
   // function to take snapshot from the canvas and save it 
   takeSnapshotimage(){
     if(this.cy){
-      this.jpg64=this.cy.jpg({bg:'#000000'});
+      this.jpg64=this.cy.jpg({ bg: this.lightmode?'#ffffff':'#000000' });
       console.log(this.cy.edges().jsons())
     }
   }
@@ -326,6 +327,19 @@ export class GraphEditorComponent implements AfterViewInit {
     }
   }
 
+  toggleLightMode(){
+    this.lightmode=!this.lightmode;
+    const newColor = this.lightmode ? '#000000' : '#ffffff';
+    this.cy.style().selector('edge').style({
+      'line-color': newColor,
+      'target-arrow-color': newColor,
+      'color': newColor
+    }).selector('node').style({
+      'color': newColor
+    }).selector('node:selected').style({
+      'color': newColor
+    }).update();
+  }
 
   solve(){
     const idcollection = this.cy.edges().map(edge=>({ 
