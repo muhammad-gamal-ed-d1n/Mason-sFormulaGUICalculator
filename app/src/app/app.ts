@@ -35,7 +35,7 @@ export class App {
   // |    |    |
   // --<--D -->--
   ngOnInit() {
-    let paths = this.sfservice.helper(this.edges)
+    let paths = this.sfservice.helper(this.edges, 'A', 'C')
     console.log(paths)
     let loops = this.sfservice.findLoops(this.edges)
     console.log(loops)

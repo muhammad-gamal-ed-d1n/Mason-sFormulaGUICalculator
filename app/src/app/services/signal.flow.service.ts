@@ -6,27 +6,28 @@ import { Edge } from '../model/edge';
 })
 export class SignalFlowService {
 
-  public findPaths(edges: Edge[], visited: Set<string>, paths: string[], path: string, node: string) {
+  public findPaths(edges: Edge[], visited: Set<string>, paths: string[], pathNodes: string[], node: string, target: string) {
     if (visited.has(node)) return;
 
     visited.add(node)
-    path += node
+    const nextPathNodes = [...pathNodes, node]
 
-    if (node == "Y6") {
-      paths.push(path)
+    if (node === target) {
+      paths.push(nextPathNodes.join('->'))
+      return;
     }
 
     for (let edge of edges) {
       if (edge.from == node) {
-        this.findPaths(edges, new Set(visited), paths, path, edge.to)
+        this.findPaths(edges, new Set(visited), paths, nextPathNodes, edge.to, target)
       }
     }
 
     return paths
   }
 
-  public helper(edges: Edge[]) {
-    return this.findPaths(edges, new Set(), [], "", "Y1")
+  public helper(edges: Edge[], source: string, target: string) {
+    return this.findPaths(edges, new Set(), [], [], source, target)
   }
 
   public findLoops(edges: Edge[]) {
@@ -34,31 +35,33 @@ export class SignalFlowService {
     const loops: Set<string> = new Set<string>()
 
     for (let edge of edges) {
-      this.findLoopsAtPoint(edges, edge.from, new Set(visited), loops, "", edge.from)
+      this.findLoopsAtPoint(edges, edge.from, new Set(visited), loops, [], edge.from)
     }
 
     return loops
   }
 
-  public findLoopsAtPoint(edges: Edge[], start: string, visited: Set<string>, loops: Set<string>, loop: string, node: string) {
+  public findLoopsAtPoint(edges: Edge[], start: string, visited: Set<string>, loops: Set<string>, loop: string[], node: string,) {
     if (visited.has(node) && node != start) return;
 
     visited.add(node)
-    loop += node
-    if (node == start && loop.length > 1) {
-      loops.add(this.getCanonicalLoop(loop))
-      return
+    const nextLoop = [...loop, node]
+    if (node == start && nextLoop.length > 1) {
+      loops.add(this.getCanonicalLoop(nextLoop))
+      return;
     }
 
     for (let edge of edges) {
       if (edge.from == node) {
-        this.findLoopsAtPoint(edges, start, new Set(visited), loops, loop, edge.to)
+        this.findLoopsAtPoint(edges, start, new Set(visited), loops, nextLoop, edge.to)
       }
     }
   }
 
-  private getCanonicalLoop(loop: string) {
-    loop = loop.slice(0, loop.length - 1)
+  private getCanonicalLoop(loopNodes: string[]) {
+    const loop = loopNodes.slice(0, loopNodes.length - 1)
+
+    if (loop.length === 0) return '';
 
     let min = 0
     for (let i = 0; i < loop.length; i++) {
@@ -111,7 +114,7 @@ export class SignalFlowService {
 
   //calculate the gain of path by multiplying the gains of its edges
   private calculatePathGain(path: string, edges: Edge[]): number {
-    const nodes = path.split('');
+    const nodes = path.split('->').filter(Boolean);
     let gain = 1;
 
     for (let i = 0; i < nodes.length - 1; i++) {
@@ -185,7 +188,7 @@ export class SignalFlowService {
 
   //Delta i calculation (same as calulateDelta but for remaining edges and loops)
   public calculateDeltaForPath(path: string, edges: Edge[]): number {
-    const pathNodes = new Set(path.split(''));
+    const pathNodes = new Set(path.split('->').filter(Boolean));
 
     //remove any branch touching the nodes on the forward path
     //remaining are the edges that don't contain the from or to nodes
@@ -200,8 +203,8 @@ export class SignalFlowService {
   }
 
   //Mason's formula
-  public calculateMasonsFormula(edges: Edge[]) {
-    const forwardPaths = this.helper(edges) || [];
+  public calculateMasonsFormula(edges: Edge[], source: string, target: string) {
+    const forwardPaths = this.helper(edges, source, target) || [];
     const allLoops = Array.from(this.findLoops(edges));
     const loopGains = this.buildLoopGainsMap(allLoops, edges);
     const delta = this.calculateDelta(allLoops, loopGains);

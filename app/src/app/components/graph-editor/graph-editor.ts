@@ -275,7 +275,7 @@ export class GraphEditorComponent implements AfterViewInit {
     ))
     console.log(idcollection);
     if(this.selected_nodes.length == 2){
-    console.log(this.solver.calculateMasonsFormula(idcollection))
+    console.log(this.solver.calculateMasonsFormula(idcollection, this.selected_nodes[0], this.selected_nodes[1]))
     }else{
       window.alert('Choose the source and target')
     }
