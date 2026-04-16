@@ -60,9 +60,9 @@ export class GraphEditorComponent implements AfterViewInit {
     
             'label': 'data(weight)',
             'color': '#ffffff',
-            'text-margin-y': -15,
+            'text-margin-y': -8,
             'text-rotation': 'autorotate',
-            'font-size': '14px'
+            'font-size': '15px'
           }
         },
         {
@@ -87,6 +87,19 @@ export class GraphEditorComponent implements AfterViewInit {
             'source-arrow-color': 'red'
           }
         },
+        {
+          selector:'edge.straight',
+          style:{
+            'curve-style': 'straight'
+          }
+        },
+        {
+          selector:'edge.curved',
+          style:{
+            'curve-style': 'unbundled-bezier',
+            'control-point-weights': 0.5
+          }
+        }
         // {
         //   selector : 'eh-source',
         //   style : {
@@ -195,7 +208,7 @@ export class GraphEditorComponent implements AfterViewInit {
       loopAllowed:()=>true,
 
       // take the weight of the edge as an input while adding the edge
-      complete:(source:cytoscape.NodeCollection,target:cytoscape.NodeCollection,addedEdge:cytoscape.EdgeCollection)=>{
+      complete:(source:cytoscape.NodeSingular,target:cytoscape.NodeSingular,addedEdge:cytoscape.EdgeCollection)=>{
         const weightInput=window.prompt("Enter edge's weight: ","1");
         if (weightInput===null || weightInput.trim()==='') {
           cy.remove(addedEdge);
@@ -207,6 +220,39 @@ export class GraphEditorComponent implements AfterViewInit {
           cy.remove(addedEdge);
           alert("Invalid weight");
         }else{
+
+          // calculating the curvature of the edge based on the number of edges between the source and target nodes and the distance between them
+          // to avoid edges overlapping each other
+          const sourceId=source.id();
+          const targetId=target.id();
+          const sourceIdNum=Number(sourceId.substring(1));
+          const targetIdNum=Number(targetId.substring(1));
+
+          if(sourceId!==targetId){
+            const edgesBetween=cy.edges(`[source="${sourceId}"][target="${targetId}"], [source="${targetId}"][target="${sourceId}"]`);
+            if(edgesBetween.length==1 && (sourceIdNum==targetIdNum+1 || sourceIdNum==targetIdNum-1)){
+              addedEdge.addClass('straight');
+            }else{
+              let start=Math.min(sourceIdNum,targetIdNum);
+              let end=Math.max(sourceIdNum,targetIdNum);
+              let jump=end-start;
+              let MaxPath=0;
+              while(start!=end){
+                const edgesbetStrt=cy.edges(`[source="Y${start}"][target="Y${start+1}"], [source="Y${start+1}"][target="Y${start}"]`);
+                MaxPath=Math.max(MaxPath,edgesbetStrt.length);
+                start++;
+              }
+              addedEdge.addClass('curved');              
+              let level=Math.floor(edgesBetween.length/2);
+              let maxLevel=Math.floor(MaxPath/2);
+              let curvature=30*maxLevel + 20*level + 100*(jump-1);
+              if(edgesBetween.length%2 !== 0) {
+                curvature=-curvature;
+              }
+              addedEdge.style('control-point-distances',curvature);
+            }
+          }
+          console.log(`Edge added from ${sourceId} to ${targetId} with weight ${weight}`);
           addedEdge.data('weight',weight);
 
           const remove_extra_added = cy.filter((element)=>{
@@ -261,11 +307,23 @@ export class GraphEditorComponent implements AfterViewInit {
   // function to take snapshot from the canvas and save it 
   takeSnapshotimage(){
     if(this.cy){
-      this.jpg64=this.cy.jpg();
+      this.jpg64=this.cy.jpg({bg:'#000000'});
       console.log(this.cy.edges().jsons())
     }
   }
   
+  downloadImage(){
+    if(this.jpg64){
+      const link=document.createElement('a');
+      link.href=this.jpg64;
+      link.download='sfg_snapshot.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+
   solve(){
     const idcollection = this.cy.edges().map(edge=>({ 
       from: edge.source().id(),

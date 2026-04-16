@@ -32,7 +32,10 @@
   <div class="UI-container">
     <div class="solution">
       <h2>SFG solver</h2>
-      <button (click)="takeSnapshotimage()"> Take Screenshot </button>
+      <div class="buttons">
+        <button class="SSBtn" (click)="takeSnapshotimage()"> Take Screenshot </button>
+        <button class="SSBtn" (click)="downloadImage()" [disabled]="!jpg64"> Download Image </button>
+      </div>
       @if(jpg64) {
         <div style="margin-top: 20px;">
           <h3>Snapshot:</h3>

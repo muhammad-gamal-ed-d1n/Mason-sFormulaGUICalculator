@@ -131,14 +131,27 @@ button {
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.buttons{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.SSBtn{
+  flex: 1;
 }
 
 button:active {
