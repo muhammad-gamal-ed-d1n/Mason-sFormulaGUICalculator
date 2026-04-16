@@ -249,6 +249,9 @@ export class GraphEditorComponent implements AfterViewInit {
               if(edgesBetween.length%2 !== 0) {
                 curvature=-curvature;
               }
+              if(sourceIdNum>targetIdNum){
+                curvature=-curvature;
+              }
               addedEdge.style('control-point-distances',curvature);
             }
           }
