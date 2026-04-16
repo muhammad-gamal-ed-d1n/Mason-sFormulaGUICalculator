@@ -12,7 +12,7 @@ export class SignalFlowService {
     visited.add(node)
     path += node
 
-    if (node == "C") {
+    if (node == "Y6") {
       paths.push(path)
     }
 
@@ -26,7 +26,7 @@ export class SignalFlowService {
   }
 
   public helper(edges: Edge[]) {
-    return this.findPaths(edges, new Set(), [], "", "A")
+    return this.findPaths(edges, new Set(), [], "", "Y1")
   }
 
   public findLoops(edges: Edge[]) {

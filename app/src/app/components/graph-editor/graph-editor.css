@@ -32,3 +32,151 @@
   overflow-y: auto;
   padding: 10px;
 }
+
+/* Color Palette Variables */
+:host {
+  --nav-bg: linear-gradient(to right, #152331, #000000);
+  --panel-bg: #1e1d1d;
+  --canvas-bg: #000000; /* Soft dark grey for the eyes */
+  --accent-blue: linear-gradient(to right, #3D4E81, #5753C9, #6E7FF3);
+  --accent-red: linear-gradient(to right, #200122, #6f0000);
+  --text-main: #e0e0e0;
+  --text-dim: #a0a0a0;
+  --border-color: #333333;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #000;
+  color: var(--text-main);
+  overflow: hidden;
+}
+
+/* Navbar */
+.navbar nav {
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 25px;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 25px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: #fff;
+}
+
+
+.UI-container {
+  flex: 1;
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+}
+
+
+.canvas-container {
+  flex: 1;
+  background-color: var(--canvas-bg);
+  border-right: 1px solid var(--border-color);
+  /* This is where your graph/simulation lives */
+}
+
+
+.solution {
+  width: 350px;
+  background: var(--panel-bg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: inset 5px 0 15px rgba(0,0,0,0.3);
+  overflow-y: auto;
+}
+
+.solution h2 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #555;
+  padding-bottom: 10px;
+  color: #fff;
+}
+
+
+button {
+  cursor: pointer;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+
+.btn, .new_button button, .Snapshot_button button, .solution button {
+  background: var(--accent-blue);
+}
+
+.start_button button {
+  background: var(--accent-red);
+  padding: 12px 30px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+
+.solution img {
+  border-radius: 8px;
+  border: 2px solid #444;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+
+.material-symbols-outlined {
+  font-size: 20px;
+}
+.logo h2{
+  color: var(--text-dim);
+}
+.btns{
+  display: flex;
+  justify-content: space-evenly;
+  gap: 5px;
+}
+.selected_solve{
+  display: flex;
+  flex-direction: column;
+}

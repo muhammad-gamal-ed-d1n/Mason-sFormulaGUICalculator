@@ -1,18 +1,35 @@
 <div class="app-layout">
   
-  <div class="toolbar">
-    <button (click)="drawing=!drawing">
-      @if(drawing){
-        <span class="material-symbols-outlined">delete</span>
-      }@else{
-        <span class="material-symbols-outlined">edit</span>
-      } 
-    </button>
-  </div> 
-
+  <div class="navbar">
+    <nav>
+        <div class="nav-group">
+        <ul class="nav-links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Plots</a></li>
+      </ul>
+      </div>
+      <div class="logo">
+        <h2>El Fa7l signalflow solver</h2>
+      </div>
+        <div class="btns">
+          <button class="btn">
+            <span class="material-symbols-outlined" (click)="undoState()">undo</span>
+          </button>
+          <button class="btn">
+            <span class="material-symbols-outlined" (click)="redoState()">redo</span>
+          </button>
+          <button (click)="drawing=!drawing" class="btn">
+            @if(drawing){
+              <span class="material-symbols-outlined">delete</span>
+            }@else{
+              <span class="material-symbols-outlined">edit</span>
+            } 
+          </button>
+  
+        </div>
+      </nav>
+</div>
   <div class="UI-container">
-
-    <div #canvas class="canvas-container"></div>
     <div class="solution">
       <h2>SFG solver</h2>
       <button (click)="takeSnapshotimage()"> Take Screenshot </button>
@@ -22,7 +39,16 @@
           <img [src]="jpg64" style="width:100%;"/>
         </div>
       }
+      <div class="selected_solve">
+        @if(selected_nodes.length == 2){
+        <span>Source: {{selected_nodes[0]}}</span>
+        <span>Target: {{selected_nodes[1]}}</span>
+        }
+      <button (click)="solve()">Solve</button>
     </div>
+    </div>
+    <div #canvas class="canvas-container"></div>
+
   </div>
-  
 </div>
+
