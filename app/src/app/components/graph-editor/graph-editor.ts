@@ -1,15 +1,27 @@
-import { AfterViewInit, Component, ElementRef, inject, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, inject, ViewChild } from '@angular/core';
 import cytoscape from 'cytoscape';
 import edgehandles from 'cytoscape-edgehandles';
 import { every } from 'rxjs';
 import { SignalFlowService } from '../../services/signal.flow.service';
 import { Edge } from '../../model/edge';
+import { DecimalPipe, NgClass } from '@angular/common';
+import { Pipe,PipeTransform } from '@angular/core';
 
 cytoscape.use(edgehandles);
+
+interface Result{
+  transferFunction: number,
+  numerator: number,
+  delta : number,
+  forwardPaths : string[],
+  allLoops : string[],
+  loopGains:  Map<String,number>
+}
 @Component({
   selector: 'app-graph-editor',
   templateUrl: './graph-editor.html',
-  styleUrl: './graph-editor.css'
+  styleUrl: './graph-editor.css',
+  imports: [NgClass]
 })
 export class GraphEditorComponent implements AfterViewInit {
   @ViewChild('canvas') canvasElement!:ElementRef;
@@ -22,6 +34,14 @@ export class GraphEditorComponent implements AfterViewInit {
   redohistory :any[] = [];
   selected_nodes : any[] =[];
   solver = inject(SignalFlowService);
+  forward_paths:string[] = [];
+  all_loops : string[] = [];
+  transferFunction!: string;
+  delta!: number;
+  loopGains!: Map<String,number>;
+  highlight: string= 'None';
+  cdrf  = inject(ChangeDetectorRef);
+  pulseAnumation:any;
   ngAfterViewInit(): void {
     
     const cy=cytoscape({
@@ -57,13 +77,14 @@ export class GraphEditorComponent implements AfterViewInit {
             'target-arrow-color': '#ffffff',
             'target-arrow-shape': 'triangle',
             'curve-style': 'bezier',
-            'control-point-step-size': 100,
+            'control-point-step-size': 40,
     
             'label': 'data(weight)',
             'color': '#ffffff',
             'text-margin-y': -8,
             'text-rotation': 'autorotate',
-            'font-size': '15px'
+            'font-size': '15px',
+            'z-index':1
           }
         },
         {
@@ -100,6 +121,40 @@ export class GraphEditorComponent implements AfterViewInit {
             'curve-style': 'unbundled-bezier',
             'control-point-weights': 0.5
           }
+        },
+        {
+          selector: 'edge.long-jump',
+          style: {
+            'curve-style':'unbundled-bezier',
+              'control-point-step-size': 100, // Make long jumps bow higher
+              'control-point-distances':(edge:any)=>{
+                const s = edge.source().position();
+                const e = edge.target().position();
+                const dist = Math.sqrt(Math.pow((e.x-s.x),2)+Math.sqrt(Math.pow((e.y - s.y),2)));
+                return s.x < e.x ? [dist/3] : [-dist/3];
+              }, 
+              "control-point-weights" : [0.5]
+            }
+        },
+        {
+          selector: '.highlighted',
+          style: {
+              "line-color" : "#00f2fe",
+              "target-arrow-color": "#00f2fe",
+              'width' : 5,
+              "z-index":999
+            }
+        },
+        {
+          selector: '.signal-path',
+          style: {
+              "line-color" : "#00f2fe",
+              "target-arrow-color": "#00f2fe",
+              'width' : 5,
+              "line-style":'dashed',
+              "line-dash-pattern":[14,10],
+              "z-index":999
+            }
         }
         // {
         //   selector : 'eh-source',
@@ -121,7 +176,7 @@ export class GraphEditorComponent implements AfterViewInit {
     // function to fit all elements in the canvas with dynamic animation based on node count
     const fitAllAnimation=()=>{
       cy.animate({
-        fit:{ eles:cy.elements(), padding:Math.max(50,300-this.nodeCnt*30) } 
+        fit:{ eles:cy.elements(),padding: 50 } 
       },{ duration: 300 });
     }
 
@@ -157,10 +212,6 @@ export class GraphEditorComponent implements AfterViewInit {
       }
     }
     });
-    cy.on('dblclick','node',(event)=>{
-      cy.remove(event.target);
-      this.addState();
-    })
 
     cy.on('select','node',(event)=>{
       if(this.drawing){
@@ -222,41 +273,54 @@ export class GraphEditorComponent implements AfterViewInit {
           alert("Invalid weight");
         }else{
 
+          const sPos = source.position();
+          const ePos = target.position();
+          const dist = Math.sqrt(Math.pow((ePos.x-sPos.x),2)+Math.sqrt(Math.pow((ePos.y - sPos.y),2)));
+          if(source.id() == target.id()){
+            addedEdge.style({
+              'loop-direction' : '-45deg',
+              'loop-sweep' : '90deg',
+              'control-point-step-size':40
+            })
+          }
+          else if(dist > 150){
+            addedEdge.addClass('long-jump');
+          }
           // calculating the curvature of the edge based on the number of edges between the source and target nodes and the distance between them
           // to avoid edges overlapping each other
-          const sourceId=source.id();
-          const targetId=target.id();
-          const sourceIdNum=Number(sourceId.substring(1));
-          const targetIdNum=Number(targetId.substring(1));
+          // const sourceId=source.id();
+          // const targetId=target.id();
+          // const sourceIdNum=Number(sourceId.substring(1));
+          // const targetIdNum=Number(targetId.substring(1));
 
-          if(sourceId!==targetId){
-            const edgesBetween=cy.edges(`[source="${sourceId}"][target="${targetId}"], [source="${targetId}"][target="${sourceId}"]`);
-            if(edgesBetween.length==1 && (sourceIdNum==targetIdNum+1 || sourceIdNum==targetIdNum-1)){
-              addedEdge.addClass('straight');
-            }else{
-              let start=Math.min(sourceIdNum,targetIdNum);
-              let end=Math.max(sourceIdNum,targetIdNum);
-              let jump=end-start;
-              let MaxPath=0;
-              while(start!=end){
-                const edgesbetStrt=cy.edges(`[source="Y${start}"][target="Y${start+1}"], [source="Y${start+1}"][target="Y${start}"]`);
-                MaxPath=Math.max(MaxPath,edgesbetStrt.length);
-                start++;
-              }
-              addedEdge.addClass('curved');              
-              let level=Math.floor(edgesBetween.length/2);
-              let maxLevel=Math.floor(MaxPath/2);
-              let curvature=30*maxLevel + 20*level + 100*(jump-1);
-              if(edgesBetween.length%2 !== 0) {
-                curvature=-curvature;
-              }
-              if(sourceIdNum>targetIdNum){
-                curvature=-curvature;
-              }
-              addedEdge.style('control-point-distances',curvature);
-            }
-          }
-          console.log(`Edge added from ${sourceId} to ${targetId} with weight ${weight}`);
+          // if(sourceId!==targetId){
+          //   const edgesBetween=cy.edges(`[source="${sourceId}"][target="${targetId}"], [source="${targetId}"][target="${sourceId}"]`);
+          //   if(edgesBetween.length==1 && (sourceIdNum==targetIdNum+1 || sourceIdNum==targetIdNum-1)){
+          //     addedEdge.addClass('straight');
+          //   }else{
+          //     let start=Math.min(sourceIdNum,targetIdNum);
+          //     let end=Math.max(sourceIdNum,targetIdNum);
+          //     let jump=end-start;
+          //     let MaxPath=0;
+          //     while(start!=end){
+          //       const edgesbetStrt=cy.edges(`[source="Y${start}"][target="Y${start+1}"], [source="Y${start+1}"][target="Y${start}"]`);
+          //       MaxPath=Math.max(MaxPath,edgesbetStrt.length);
+          //       start++;
+          //     }
+          //     addedEdge.addClass('curved');              
+          //     let level=Math.floor(edgesBetween.length/2);
+          //     let maxLevel=Math.floor(MaxPath/2);
+          //     let curvature=30*maxLevel + 20*level + 100*(jump-1);
+          //     if(edgesBetween.length%2 !== 0) {
+          //       curvature=-curvature;
+          //     }
+          //     if(sourceIdNum>targetIdNum){
+          //       curvature=-curvature;
+          //     }
+          //     addedEdge.style('control-point-distances',curvature);
+          //   }
+          // }
+          // console.log(`Edge added from ${sourceId} to ${targetId} with weight ${weight}`);
           addedEdge.data('weight',weight);
 
           const remove_extra_added = cy.filter((element)=>{
@@ -350,11 +414,66 @@ export class GraphEditorComponent implements AfterViewInit {
     ))
     console.log(idcollection);
     if(this.selected_nodes.length == 2){
-    console.log(this.solver.calculateMasonsFormula(idcollection, this.selected_nodes[0], this.selected_nodes[1]))
+      const result:Result =  this.solver.calculateMasonsFormula(idcollection, this.selected_nodes[0], this.selected_nodes[1]);
+      console.log(result);
+      this.all_loops = result.allLoops;
+      this.forward_paths = result.forwardPaths;
+      this.delta = result.delta
+      this.transferFunction = result.transferFunction.toPrecision(6);
+      this.transferFunction = this.transferFunction;
+      this.loopGains = result.loopGains;
     }else{
       window.alert('Choose the source and target')
     }
 
   }
-    
+    f_highlight(Loop:string){
+      this.highlight = (this.highlight === Loop) ? '' : Loop;
+      console.log(this.highlight == Loop);      
+      if(this.highlight ==''){
+      this.cy.edges().removeClass('highlighted');
+      this.cy.edges().removeClass('signal-path');
+      return;
+      }
+      this.cy.edges().removeClass('highlighted');
+      this.cy.edges().removeClass('signal-path');
+
+      let nodes:string[]=[];
+      if(Loop.includes('->')) nodes= Loop.split('->').map(x => x.trim());
+      else{
+        nodes= Loop.split('-').map(x => x.trim());
+        nodes.push(nodes[0]);
+
+      }
+      for(let i=0;i<nodes.length-1;i++){
+        const source = nodes[i];
+        const target = nodes[i+1];
+
+        const edge = this.cy.edges(
+          `[source="${source}"][target="${target}"]`
+        )
+        
+        edge.addClass('highlighted');
+      }
+
+
+      this.animatePath()
+      this.cdrf.detectChanges();
+    }
+    animatePath(){
+      const edges = this.cy.edges('.highlighted');
+      if(this.pulseAnumation)
+        clearInterval(this.pulseAnumation);
+
+      edges.addClass('signal-path');
+      let offset = 0;
+
+      this.pulseAnumation = setInterval(()=>{
+        offset++;
+        edges.style(
+          'line-dash-offset',
+          offset*-1
+        );
+      },60)
+    }
 }

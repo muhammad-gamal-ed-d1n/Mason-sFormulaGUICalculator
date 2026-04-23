@@ -109,6 +109,7 @@ nav ul {
   display: flex;
   width: 100%;
   overflow: hidden;
+  flex-direction: row;
 }
 
 
@@ -178,7 +179,7 @@ button:active {
 }
 
 
-.btn, .new_button button, .Snapshot_button button, .solution button {
+.btn, .new_button button, .Snapshot_button button {
   background: var(--accent-blue);
 }
 
@@ -211,4 +212,93 @@ button:active {
 .selected_solve{
   display: flex;
   flex-direction: column;
+}
+
+.view_panel{
+  background: var(--panel-bg);
+  border:  1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  color: var(--text-main);
+  transition: all 0.3s ease;
+}
+
+.card-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.header-left{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-circle{
+  width:16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 50px;
+}
+
+.panel-title{
+  margin: 0 0 24px 28px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.result-row{
+  display: flex;
+  align-items: end;
+  margin-bottom: 12px;
+  padding-left: 28px;
+  justify-content: space-between;
+}
+.label{
+  width: 140px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+.value-badge{
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.accent-blue{
+  background: var(--accent-blue);
+}
+.accent-red{
+  background: var(--accent-red);
+}
+.accent-dim{
+  background: var(--border-color);
+  color: var(--text-main);
+  border: 1px solid var(--text-dim);
+}
+
+.result-row button{
+  width: 35px; 
+  height: 35px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;  
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 60%;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+.button_hide{
+  background-image: url('/svgviewer-output(1).svg');
+  background-color: white;
+}
+.button_show{
+  background-image: url('/svgviewer-output.svg');
+  background-color: white;
 }

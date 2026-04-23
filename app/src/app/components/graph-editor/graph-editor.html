@@ -57,7 +57,54 @@
         }
       <button (click)="solve()">Solve</button>
     </div>
+    <div class="view_panel">
+      <div class="card-header">
+        <div class="header-left">
+          <span class="status-circle"></span>
+          <span class="badge">SYSTEM ANALYSIS</span>
+        </div>
+      </div>
+      <h2 class="panel-title">Mason's Gain Results</h2>
+      @if(transferFunction){
+        <div class="result-row">
+          <span class="label">TRANSFER FUNCTION</span>
+          <div class="value-box orange">{{transferFunction}}</div>
+        </div>
+      }
+      @for (item of forward_paths; track $index;let i = $index) {
+        <div class="result-row">
+          <div class="">
+         <span class="label">FORWARD PATH {{i+1}}</span>
+         <div class="value-box purple">{{item}}</div>
+        </div>
+        <button [class.button_show]="highlight === item"
+        [class.button_hide]="highlight !== item"
+        (click)="f_highlight(item)"
+        ></button>
+        </div>
+      }
+    
+      @for (item of all_loops; track $index;let i = $index) {
+        <div class="result-row">
+          <div class="">
+          <span class="label">LOOP {{i+1}}</span>
+          <div class="value-box blue">{{item}}</div>
+        </div>
+        <button [class.button_show]="highlight === item"
+        [class.button_hide]="highlight !== item"
+                (click)="f_highlight(item)"
+                ></button>
+        </div>
+      }
+
+      <!-- @for (item of forward_paths; track $index; let i = $index) {
+        <div class="forward_paths">
+          <span>{{item}}</span>
+        </div>
+      } -->
+
     </div>
+  </div>
     <div #canvas class="canvas-container"></div>
 
   </div>
