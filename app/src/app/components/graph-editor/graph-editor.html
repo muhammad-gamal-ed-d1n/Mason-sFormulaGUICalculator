@@ -97,6 +97,19 @@
         </div>
       }
 
+      @if (touchGroups) {
+        @for (group of touchGroups.keys(); track $index;) {
+          <div class="result-row">
+            <div class="">
+            <span class="label">{{ group }}</span>
+            @for (loops of group; track $index) {
+              <div class="value-box blue">{{ touchGroups.get(group) }}</div>
+            }
+          </div>
+          </div>
+        }
+      }
+
       <!-- @for (item of forward_paths; track $index; let i = $index) {
         <div class="forward_paths">
           <span>{{item}}</span>

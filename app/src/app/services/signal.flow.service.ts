@@ -226,7 +226,7 @@ export class SignalFlowService {
     const allLoops = Array.from(this.findLoops(edges));
     const loopGains = this.buildLoopGainsMap(allLoops, edges);
     const delta = this.calculateDelta(allLoops, loopGains);
-    // const touchGroup = this.getNonTouchingGroups()
+    const touchGroups = this.getAllNonTouchingLoops(allLoops);
 
     let numerator = 0;
     for (const path of forwardPaths) {
@@ -242,6 +242,7 @@ export class SignalFlowService {
       forwardPaths,
       allLoops,
       loopGains,
+      touchGroups,
     };
   }
 }

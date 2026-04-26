@@ -15,7 +15,8 @@ interface Result{
   delta : number,
   forwardPaths : string[],
   allLoops : string[],
-  loopGains:  Map<String,number>
+  loopGains:  Map<String,number>,
+  touchGroups: Map<string, string[][]>
 }
 @Component({
   selector: 'app-graph-editor',
@@ -39,6 +40,7 @@ export class GraphEditorComponent implements AfterViewInit {
   transferFunction!: string;
   delta!: number;
   loopGains!: Map<String,number>;
+  touchGroups!: Map<string, string[][]>;
   highlight: string= 'None';
   cdrf  = inject(ChangeDetectorRef);
   pulseAnumation:any;
@@ -422,6 +424,8 @@ export class GraphEditorComponent implements AfterViewInit {
       this.transferFunction = result.transferFunction.toPrecision(6);
       this.transferFunction = this.transferFunction;
       this.loopGains = result.loopGains;
+      this.touchGroups = result.touchGroups;
+      console.log(this.touchGroups)
     }else{
       window.alert('Choose the source and target')
     }
