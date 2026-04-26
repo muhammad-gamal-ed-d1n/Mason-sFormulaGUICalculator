@@ -112,6 +112,24 @@ export class SignalFlowService {
     return results;
   }
 
+
+  /**
+   * @param allLoops: loops returned from getLoops()
+   * @returns map of all existing non-touching groups of size i,
+   *  starting from i = 2 until (and including) @param allLoops.length
+   */
+  public getAllNonTouchingLoops(allLoops: string[]): Map<string, string[][]> {
+    const result: Map<string, string[][]> = new Map();
+    // Gamal: get all non-touching loops starting from groups of size 2
+    for (let i = 2; i <= allLoops.length; i++) {
+      const group = this.getNonTouchingGroups(allLoops, i);
+      // Gamal: if group no matches are found break the loop
+      if (group.length === 0) break;
+      result.set(`${i} non-touching loops`, group);
+    }
+    return result;
+  }
+
   //calculate the gain of path by multiplying the gains of its edges
   private calculatePathGain(path: string, edges: Edge[]): number {
     const nodes = path.split('->').filter(Boolean);
@@ -208,6 +226,7 @@ export class SignalFlowService {
     const allLoops = Array.from(this.findLoops(edges));
     const loopGains = this.buildLoopGainsMap(allLoops, edges);
     const delta = this.calculateDelta(allLoops, loopGains);
+    // const touchGroup = this.getNonTouchingGroups()
 
     let numerator = 0;
     for (const path of forwardPaths) {
