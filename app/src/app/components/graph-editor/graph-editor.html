@@ -98,7 +98,7 @@
       }
 
       @if (touchGroups) {
-        @for (group of touchGroups.keys(); track $index;) {
+        @for (group of touchGroupKeys(); track $index) {
           <div class="result-row">
             <div class="">
             <span class="label">{{ group }}</span>

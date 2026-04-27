@@ -4,7 +4,6 @@ import edgehandles from 'cytoscape-edgehandles';
 import { every } from 'rxjs';
 import { SignalFlowService } from '../../services/signal.flow.service';
 import { Edge } from '../../model/edge';
-import { DecimalPipe, NgClass } from '@angular/common';
 import { Pipe,PipeTransform } from '@angular/core';
 
 cytoscape.use(edgehandles);
@@ -22,7 +21,7 @@ interface Result{
   selector: 'app-graph-editor',
   templateUrl: './graph-editor.html',
   styleUrl: './graph-editor.css',
-  imports: [NgClass]
+  imports: []
 })
 export class GraphEditorComponent implements AfterViewInit {
   @ViewChild('canvas') canvasElement!:ElementRef;
@@ -41,6 +40,11 @@ export class GraphEditorComponent implements AfterViewInit {
   delta!: number;
   loopGains!: Map<String,number>;
   touchGroups!: Map<string, string[][]>;
+  
+  touchGroupKeys(): string[] {
+    return this.touchGroups ? Array.from(this.touchGroups.keys()) : [];
+  }
+
   highlight: string= 'None';
   cdrf  = inject(ChangeDetectorRef);
   pulseAnumation:any;
@@ -85,7 +89,7 @@ export class GraphEditorComponent implements AfterViewInit {
             'color': '#ffffff',
             'text-margin-y': -8,
             'text-rotation': 'autorotate',
-            'font-size': '15px',
+            'font-size': '8px',
             'z-index':1
           }
         },
@@ -178,7 +182,7 @@ export class GraphEditorComponent implements AfterViewInit {
     // function to fit all elements in the canvas with dynamic animation based on node count
     const fitAllAnimation=()=>{
       cy.animate({
-        fit:{ eles:cy.elements(),padding: 50 } 
+        fit:{ eles:cy.elements(), padding:Math.max(50,300-this.nodeCnt*30) } 
       },{ duration: 300 });
     }
 
@@ -274,56 +278,27 @@ export class GraphEditorComponent implements AfterViewInit {
           cy.remove(addedEdge);
           alert("Invalid weight");
         }else{
-
-          const sPos = source.position();
-          const ePos = target.position();
-          const dist = Math.sqrt(Math.pow((ePos.x-sPos.x),2)+Math.sqrt(Math.pow((ePos.y - sPos.y),2)));
-          if(source.id() == target.id()){
-            addedEdge.style({
-              'loop-direction' : '-45deg',
-              'loop-sweep' : '90deg',
-              'control-point-step-size':40
-            })
+          const existingEdge=cy.edges(`[source="${source.id()}"][target="${target.id()}"]`).not(addedEdge);
+          if(existingEdge.length>0){
+            const oldWeight=parseFloat(existingEdge.first().data('weight'));
+            existingEdge.first().data('weight', oldWeight+weight);
+            cy.remove(addedEdge);
+          }else {
+            const sPos=source.position();
+            const ePos=target.position();
+            const dist=Math.sqrt(Math.pow((ePos.x-sPos.x),2)+Math.sqrt(Math.pow((ePos.y-sPos.y),2)));
+            if(source.id()==target.id()){
+              addedEdge.style({
+                'loop-direction':'-45deg',
+                'loop-sweep':'90deg',
+                'control-point-step-size':40
+              })
+            }
+            else if(dist>150){
+              addedEdge.addClass('long-jump');
+            }
+            addedEdge.data('weight',weight);
           }
-          else if(dist > 150){
-            addedEdge.addClass('long-jump');
-          }
-          // calculating the curvature of the edge based on the number of edges between the source and target nodes and the distance between them
-          // to avoid edges overlapping each other
-          // const sourceId=source.id();
-          // const targetId=target.id();
-          // const sourceIdNum=Number(sourceId.substring(1));
-          // const targetIdNum=Number(targetId.substring(1));
-
-          // if(sourceId!==targetId){
-          //   const edgesBetween=cy.edges(`[source="${sourceId}"][target="${targetId}"], [source="${targetId}"][target="${sourceId}"]`);
-          //   if(edgesBetween.length==1 && (sourceIdNum==targetIdNum+1 || sourceIdNum==targetIdNum-1)){
-          //     addedEdge.addClass('straight');
-          //   }else{
-          //     let start=Math.min(sourceIdNum,targetIdNum);
-          //     let end=Math.max(sourceIdNum,targetIdNum);
-          //     let jump=end-start;
-          //     let MaxPath=0;
-          //     while(start!=end){
-          //       const edgesbetStrt=cy.edges(`[source="Y${start}"][target="Y${start+1}"], [source="Y${start+1}"][target="Y${start}"]`);
-          //       MaxPath=Math.max(MaxPath,edgesbetStrt.length);
-          //       start++;
-          //     }
-          //     addedEdge.addClass('curved');              
-          //     let level=Math.floor(edgesBetween.length/2);
-          //     let maxLevel=Math.floor(MaxPath/2);
-          //     let curvature=30*maxLevel + 20*level + 100*(jump-1);
-          //     if(edgesBetween.length%2 !== 0) {
-          //       curvature=-curvature;
-          //     }
-          //     if(sourceIdNum>targetIdNum){
-          //       curvature=-curvature;
-          //     }
-          //     addedEdge.style('control-point-distances',curvature);
-          //   }
-          // }
-          // console.log(`Edge added from ${sourceId} to ${targetId} with weight ${weight}`);
-          addedEdge.data('weight',weight);
 
           const remove_extra_added = cy.filter((element)=>{
             return element.id()[0]!='Y' && element.isNode()&& element.id().length > 5 ;
