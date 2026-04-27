@@ -89,7 +89,7 @@
         <div class="result-row">
           <div class="">
           <span class="label">LOOP {{i+1}}</span>
-          <div class="value-box blue">{{item}}</div>
+          <div class="value-box blue">{{item.concat(""+item.split('-')[0])}}</div>
         </div>
         <button [class.button_show]="highlight === item"
         [class.button_hide]="highlight !== item"

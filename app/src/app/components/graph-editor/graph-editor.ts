@@ -128,26 +128,26 @@ export class GraphEditorComponent implements AfterViewInit {
             'control-point-weights': 0.5
           }
         },
-        {
-          selector: 'edge.long-jump',
-          style: {
-            'curve-style':'unbundled-bezier',
-              'control-point-step-size': 100, // Make long jumps bow higher
-              'control-point-distances':(edge:any)=>{
-                const s = edge.source().position();
-                const e = edge.target().position();
-                const dist = Math.sqrt(Math.pow((e.x-s.x),2)+Math.sqrt(Math.pow((e.y - s.y),2)));
-                return s.x < e.x ? [dist/3] : [-dist/3];
-              }, 
-              "control-point-weights" : [0.5]
-            }
-        },
+        // {
+        //   selector: 'edge.long-jump',
+        //   style: {
+        //     'curve-style':'unbundled-bezier',
+        //       'control-point-step-size': 100, // Make long jumps bow higher
+        //       'control-point-distances':(edge:any)=>{
+        //         const s = edge.source().position();
+        //         const e = edge.target().position();
+        //         const dist = Math.sqrt(Math.pow((e.x-s.x),2)+Math.sqrt(Math.pow((e.y - s.y),2)));
+        //         return s.x < e.x ? [dist/3] : [-dist/3];
+        //       }, 
+        //       "control-point-weights" : [0.5]
+        //     }
+        // },
         {
           selector: '.highlighted',
           style: {
               "line-color" : "#00f2fe",
               "target-arrow-color": "#00f2fe",
-              'width' : 5,
+              'width' : 3,
               "z-index":999
             }
         },
@@ -156,7 +156,7 @@ export class GraphEditorComponent implements AfterViewInit {
           style: {
               "line-color" : "#00f2fe",
               "target-arrow-color": "#00f2fe",
-              'width' : 5,
+              'width' : 3,
               "line-style":'dashed',
               "line-dash-pattern":[14,10],
               "z-index":999
@@ -307,6 +307,7 @@ export class GraphEditorComponent implements AfterViewInit {
           for(let items of remove_extra_added){
           cy.remove(`#${items.id()}`);
           }
+          this.addState();
         }
       },
     });
@@ -383,6 +384,11 @@ export class GraphEditorComponent implements AfterViewInit {
   }
 
   solve(){
+    if(!(this.selected_nodes[0] && this.selected_nodes[1])){
+      if(this.selected_nodes[0] == this.selected_nodes[1])
+        alert("Cant make the source and the target the same nodes!");
+      return;
+    }
     const idcollection = this.cy.edges().map(edge=>({ 
       from: edge.source().id(),
       to: edge.target().id(),
