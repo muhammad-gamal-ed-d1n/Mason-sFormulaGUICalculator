@@ -65,6 +65,12 @@
           <span class="badge">SYSTEM ANALYSIS</span>
         </div>
       </div>
+      <h2 class="panel-title">Mason's Formula</h2>
+      @if(formulaLatexHtml){
+        <div class="result-row">
+          <div class="value-box" [innerHTML]="formulaLatexHtml"></div>
+        </div>
+      }
       <h2 class="panel-title">Mason's Gain Results</h2>
       @if(transferFunction){
         <div class="result-row">

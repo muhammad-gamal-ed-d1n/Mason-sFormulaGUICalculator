@@ -220,6 +220,22 @@ export class SignalFlowService {
     return this.calculateDelta(remainingLoops, remainingLoopGains);
   }
 
+  //Latex representation of Mason's formula
+  private generateMasonLatex(forwardPaths: string[], edges: Edge[], delta: number): string {
+    if (forwardPaths.length === 0) {
+      return '\\frac{C(s)}{R(s)} = 0';
+    }
+
+    //numerator terms: P1*Delta1 + P2*Delta2 + ... + Pn*Deltan
+    const numeratorTerms: string[] = [];
+    for (let i = 0; i < forwardPaths.length; i++) {
+      numeratorTerms.push(`P_{${i + 1}} \\Delta_{${i + 1}}`);
+    }
+
+    const numerator = numeratorTerms.join(' + ');
+    return `\\frac{C(s)}{R(s)} = \\frac{${numerator}}{\\Delta}`;
+  }
+
   //Mason's formula
   public calculateMasonsFormula(edges: Edge[], source: string, target: string) {
     const forwardPaths = this.helper(edges, source, target) || [];
@@ -235,6 +251,8 @@ export class SignalFlowService {
       numerator +=  pathGain * deltaI;
     }
 
+    const formulaLatex = this.generateMasonLatex(forwardPaths, edges, delta);
+
     return {
       transferFunction: delta === 0 ? Infinity : numerator / delta,
       numerator,
@@ -243,6 +261,7 @@ export class SignalFlowService {
       allLoops,
       loopGains,
       touchGroups,
+      formulaLatex,
     };
   }
 }

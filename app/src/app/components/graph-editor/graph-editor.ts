@@ -1,10 +1,12 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, inject, ViewChild } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import cytoscape from 'cytoscape';
 import edgehandles from 'cytoscape-edgehandles';
 import { every } from 'rxjs';
 import { SignalFlowService } from '../../services/signal.flow.service';
 import { Edge } from '../../model/edge';
 import { Pipe,PipeTransform } from '@angular/core';
+import katex from 'katex';
 
 cytoscape.use(edgehandles);
 
@@ -15,7 +17,8 @@ interface Result{
   forwardPaths : string[],
   allLoops : string[],
   loopGains:  Map<String,number>,
-  touchGroups: Map<string, string[][]>
+  touchGroups: Map<string, string[][]>,
+  formulaLatex: string
 }
 @Component({
   selector: 'app-graph-editor',
@@ -34,12 +37,15 @@ export class GraphEditorComponent implements AfterViewInit {
   redohistory :any[] = [];
   selected_nodes : any[] =[];
   solver = inject(SignalFlowService);
+  sanitizer = inject(DomSanitizer);
   forward_paths:string[] = [];
   all_loops : string[] = [];
   transferFunction!: string;
   delta!: number;
   loopGains!: Map<String,number>;
   touchGroups!: Map<string, string[][]>;
+  formulaLatex!: string;
+  formulaLatexHtml!: SafeHtml;
   
   touchGroupKeys(): string[] {
     return this.touchGroups ? Array.from(this.touchGroups.keys()) : [];
@@ -406,6 +412,10 @@ export class GraphEditorComponent implements AfterViewInit {
       this.transferFunction = this.transferFunction;
       this.loopGains = result.loopGains;
       this.touchGroups = result.touchGroups;
+      this.formulaLatex = result.formulaLatex;
+      this.formulaLatexHtml = this.sanitizer.bypassSecurityTrustHtml(
+        katex.renderToString(result.formulaLatex, { displayMode: true })
+      );
       console.log(this.touchGroups)
     }else{
       window.alert('Choose the source and target')
