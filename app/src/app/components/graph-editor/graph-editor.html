@@ -5,7 +5,6 @@
         <div class="nav-group">
         <ul class="nav-links">
         <li><a href="#">Home</a></li>
-        <li><a href="#">Plots</a></li>
         <li>
           <button [class]="lightmode ? 'btn-light' : 'btn-dark'" (click)="toggleLightMode()" title="Toggle Theme"> 
             @if(lightmode){
@@ -18,7 +17,8 @@
       </ul>
       </div>
       <div class="logo">
-        <h2>El Fa7l signalflow solver</h2>
+        <div class="Butterfly"></div>
+        <h2>Butterfly signal flow solver</h2>
       </div>
         <div class="btns">
           <button class="btn">
@@ -74,7 +74,7 @@
       <h2 class="panel-title">Mason's Gain Results</h2>
       @if(transferFunction){
         <div class="result-row">
-          <span class="label">TRANSFER FUNCTION</span>
+          <span class="label">TRANSFER FUNCTION :  </span>
           <div class="value-box orange">{{transferFunction}}</div>
         </div>
       }
@@ -95,7 +95,7 @@
         <div class="result-row">
           <div class="">
           <span class="label">LOOP {{i+1}}</span>
-          <div class="value-box blue">{{item.concat(""+item.split('-')[0])}}</div>
+          <div class="value-box blue">{{item.concat("-"+item.split('-')[0])}}</div>
         </div>
         <button [class.button_show]="highlight === item"
         [class.button_hide]="highlight !== item"

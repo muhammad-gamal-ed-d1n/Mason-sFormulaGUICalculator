@@ -64,7 +64,7 @@
    NAVIGATION BAR
    ========================================= */
 .navbar nav {
-  height: 64px;
+  height: 70px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -314,6 +314,7 @@ button:disabled {
 .value-box {
   font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
   font-size: 0.95rem;
+  text-align: left;
   font-weight: 600;
   color: var(--text-main);
   word-break: break-all;

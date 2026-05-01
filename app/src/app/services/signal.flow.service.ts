@@ -244,14 +244,28 @@ export class SignalFlowService {
     const delta = this.calculateDelta(allLoops, loopGains);
     const touchGroups = this.getAllNonTouchingLoops(allLoops);
 
+    let formulaLatex = this.generateMasonLatex(forwardPaths, edges, delta);
     let numerator = 0;
+    let _index = 0;
     for (const path of forwardPaths) {
+      _index++;
+
+      formulaLatex +="\\newline ";
+
       const pathGain = this.calculatePathGain(path, edges);
+      const Forward_i_gain = `P_${_index} = \\space ${pathGain} `;
+      formulaLatex += Forward_i_gain;
+
       const deltaI = this.calculateDeltaForPath(path, edges);
+      const delta_path_i = `\\Delta_{${_index}} \\space = \\space ${deltaI} `;
+      
+      formulaLatex +="\\newline";
+      formulaLatex += delta_path_i;
+
       numerator +=  pathGain * deltaI;
     }
-
-    const formulaLatex = this.generateMasonLatex(forwardPaths, edges, delta);
+    formulaLatex += `\\newline \\Delta = ${delta}`
+    
 
     return {
       transferFunction: delta === 0 ? Infinity : numerator / delta,
