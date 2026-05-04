@@ -184,7 +184,9 @@ export class GraphEditorComponent implements AfterViewInit {
     this.setup(cy);
   }
   setup(cy:cytoscape.Core){
-
+    cy.off('tap');
+    cy.off('select');
+    cy.off('click');
     // function to fit all elements in the canvas with dynamic animation based on node count
     const fitAllAnimation=()=>{
       cy.animate({
@@ -253,7 +255,6 @@ export class GraphEditorComponent implements AfterViewInit {
         console.log(event.target.data())
         event.target.data('weight',weight);
       }
-      this.addState();
     })
     // Remove edge when tap on it while not in drawing mode
     cy.on('tap', 'edge', (event)=>{
@@ -313,8 +314,8 @@ export class GraphEditorComponent implements AfterViewInit {
           for(let items of remove_extra_added){
           cy.remove(`#${items.id()}`);
           }
-          this.addState();
         }
+        this.addState();
       },
     });
   }
@@ -349,8 +350,12 @@ export class GraphEditorComponent implements AfterViewInit {
     this.undohistory.push(previous_state)
 
     if(previous_state){
-      this.cy.json((previous_state))
-    
+      this.cy.batch(()=>{
+        this.cy.json((previous_state))
+        this.cy.panningEnabled(true);
+        this.cy.zoomingEnabled(true);
+      })
+        this.setup(this.cy);
     }
   }
   // refresh(){
