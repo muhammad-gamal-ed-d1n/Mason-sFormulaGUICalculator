@@ -184,9 +184,6 @@ export class GraphEditorComponent implements AfterViewInit {
     this.setup(cy);
   }
   setup(cy:cytoscape.Core){
-    cy.off('tap');
-    cy.off('select');
-    cy.off('click');
     // function to fit all elements in the canvas with dynamic animation based on node count
     const fitAllAnimation=()=>{
       cy.animate({
@@ -348,14 +345,17 @@ export class GraphEditorComponent implements AfterViewInit {
     const previous_state : any = this.redohistory.pop();
 
     this.undohistory.push(previous_state)
-
+    const current_zoom = this.cy.zoom();
+    const current_pan= this.cy.pan();
     if(previous_state){
       this.cy.batch(()=>{
         this.cy.json((previous_state))
         this.cy.panningEnabled(true);
         this.cy.zoomingEnabled(true);
       })
-        this.setup(this.cy);
+      this.cy.zoom(current_zoom)
+      this.cy.pan(current_pan);
+      this.setup(this.cy);
     }
   }
   // refresh(){
